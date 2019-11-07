@@ -1,0 +1,600 @@
+---
+title: "HW5"
+author: "Your Name Goes Here"
+output: pdf_document
+header-includes:
+   - \usepackage{booktabs}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+
+# Details
+
+### Due Date
+
+Please commit your submission for this assignment by 5:00 PM Wednesday Oct 30.
+
+### Grading
+
+20% of your grade on this assignment is for completion.  A quick pass will be made to ensure that you've made a reasonable attempt at all problems.
+
+Some of the problems will be graded more carefully for correctness.  In grading these problems, an emphasis will be placed on full explanations of your thought process.  You usually won't need to write more than a few sentences for any given problem, but you should write complete sentences!  Understanding and explaining the reasons behind your decisions is more important than making the "correct" decision.
+
+Solutions to all problems will be provided.
+
+### Collaboration
+
+You are allowed to work with others on this assignment, but you must complete and submit your own write up.  You should not copy large blocks of code or written text from another student.
+
+### Sources
+
+You may refer to class notes, our textbook, Wikipedia, etc..  All sources you refer to must be cited in the space I have provided at the end of this problem set.
+
+In particular, you may find the following resources to be valuable:
+
+ * Courses assigned on DataCamp
+ * Example R code from class
+ * Cheat sheets and resources linked from [http://www.evanlray.com/stat340_f2019/resources.html]
+
+### Load Packages
+
+The following R code loads packages needed in this assignment.
+
+```{r, warning=FALSE, message=FALSE}
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(caret)
+```
+
+# Conceptual Problems
+
+If you prefer, you can write out your answers to the conceptual problems by hand and then either turn in a physical copy or scan and commit them to GitHub.
+
+## Problem 1: Decision boundaries in logistic regression.
+
+Suppose I fit the following variation on a logistic regression model with two quantitative explanatory variables:
+
+\begin{align*}
+Y_i &\vert x_{i1}, x_{i2} \sim \text{Bernoulli}(f(x_{i1}, x_{i2})) \\
+f(x_{i1}, x_{i2}) &= \frac{e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}}}{1 + e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}}}
+\end{align*}
+
+Each $Y_{i}$ is assumed independent of the others.
+
+### (a) Find an expression for the decision boundary if you will predict $\hat{Y}_i = 1$ whenever $\hat{f}(x_{i1}, x_{i2}) > 0.5$.
+
+We need to solve for values of $x_{i1}$ and $x_{i2}$ such that $f(x_{i1}, x_{i2}) = 0.5$.
+
+\begin{alignat*}{2}
+& & 0.5 &= f(x_{i1}, x_{i2}) \\
+& & &= \frac{e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}}}{1 + e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}}} \\
+&\Rightarrow & 0.5 + 0.5 e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}} &= e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}} \\
+&\Rightarrow & 1 &= e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}} \\
+&\Rightarrow & 0 &= \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2} \\
+&\Rightarrow & x_{i2} &= \frac{-\beta_0}{\beta_3} + \frac{-\beta_1}{\beta_3} x_{i1} + \frac{-\beta_2}{\beta_3} x_{i1}^2  \\
+\end{alignat*}
+
+### (b) Find an expression for the decision boundary if you will predict $\hat{Y}_i = 1$ whenever $\hat{f}(x_{i1}, x_{i2}) > 0.1$.
+
+We need to solve for values of $x_{i1}$ and $x_{i2}$ such that $f(x_{i1}, x_{i2}) = 0.1$.
+
+\begin{alignat*}{2}
+& & 0.1 &= f(x_{i1}, x_{i2}) \\
+& & &= \frac{e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}}}{1 + e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}}} \\
+&\Rightarrow & 0.1 + 0.1 e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}} &= e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}} \\
+&\Rightarrow & \frac{1}{9} &= e^{\beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2}} \\
+&\Rightarrow & \log\left(\frac{1}{9}\right) &= \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i1}^2 + \beta_3 x_{i2} \\
+&\Rightarrow & x_{i2} &= \frac{-\beta_0 + \log(1/9)}{\beta_3} + \frac{-\beta_1}{\beta_3} x_{i1} + \frac{-\beta_2}{\beta_3} x_{i1}^2  \\
+\end{alignat*}
+
+
+## Problem 2: More decision boundaries
+
+### (a) Suppose you are doing a classification task.  Your sample size is large, you don't have many explanatory variables, and the true decision boundary is highly non-linear.  Would you prefer a KNN classification model or a logistic regression model?  Why?  Your justification should reference the sample size, number of explanatory variables, and shape of the decision boundary.
+
+We would prefer a KNN model in this case.  If the sample size was very small or the number of explanatory variable was very large we would not prefer KNN because it suffers more in those cases (in the second case, because of the curse of dimensionality).  In this case, we don't need to worry about that so KNN and logistic regression are both possibilities.  Since the decision boundary is highly non-linear, KNN is more of a natural choice.  To get highly non-linear decision boundaries out of logistic regression, we have to include many polynomial terms and experiment to get the correct specification.  It is easier to just use KNN which will automatically capture non-linear decision boundaries.
+
+### (b) Suppose you are doing a classification task.  Your sample size is relatively small, you have 100 explanatory variables all of which may be relevant to the classification task, and based on a pairs plot it looks like the decision boundary is approximately linear.  Would you prefer a KNN classification model or a logistic regression model?  Why?  Your justification should reference the sample size, number of explanatory variables, and shape of the decision boundary.
+
+Since our sample size is small and there are 100 explanatory variables, we should not use KNN since its performance degrades quickly as the number of explanatory variables increases because of the curse of dimensionality.  Additionally, since the decision boundary is approximately linear logistic regression is a good choice since it will give a linear decision boundary.
+
+## Problem 3: Adapted from ISLR Example 4.6.
+
+Suppose we collect data for a group of students in a statistics class with variables
+
+ * $X_1$ = hours studied
+ * $X_2$ = undergrad GPA
+ * $Y$ = receive an A in this class ("Yes" or "No")
+
+We fit a logistic regression model and produce estimated coefficients, $\hat{\beta}_0 = -6$, $\hat{\beta}_1 = 0.05$, and $\hat{\beta}_2 = 1$.
+
+### (a) What is the interpretation of the coefficient estimate $\hat{\beta}_1 = 0.05$, in terms of the odds of getting an A?
+
+For each increase of one hour in time spent studying, the estimated odds of getting an A increases by a multiplicative factor of $e^{0.05} \approx 1.051$.
+
+### (b) Estimate the *probability* that a student who studies for 40 hours and has an undergrad GPA of 3.5 gets an A in the class.
+
+$\hat{P}(\text{Student gets an A}) = \frac{e^{(-6 + 0.05 * 40 + 1 * 3.5)}}{1 + e^{(-6 + 0.05 * 40 + 1 * 3.5)}} = 0.378$
+
+### (c) Estimate the *probability* that a student who studies for 41 hours and has an undergrad GPA of 3.5 gets an A in the class.
+
+$\hat{P}(\text{Student gets an A}) = \frac{e^{(-6 + 0.05 * 41 + 1 * 3.5)}}{1 + e^{(-6 + 0.05 * 41 + 1 * 3.5)}} = 0.389$
+
+### (d) By using your answer to part (b) and the definition of odds, estimate the *odds* that a student who studies for the class for 40 hours and has an undergrad GPA of 3.5 gets an A in the class.  Do this again for the *odds* that a student who studies for the class for 41 hours and has an undergrad GPA of 3.5 gets an A in the class, using your answer to part (c).  Verify that the interpretation you gave in part (a) holds in this example.
+
+For student studying 40 hours:
+
+\begin{align*}
+\widehat{\text{Odds}}(\text{Student gets an A}) &= \frac{\hat{P}(\text{Student gets an A})}{\hat{P}(\text{Student doesn't get an A})} \\
+&= \frac{\hat{P}(\text{Student gets an A})}{1 - \hat{P}(\text{Student gets an A})} \\
+&= \frac{\hat{P}(0.378)}{1 - 0.378)} \\
+&= 0.608
+\end{align*}
+
+
+For student studying 41 hours:
+
+\begin{align*}
+\widehat{\text{Odds}}(\text{Student gets an A}) &= \frac{\hat{P}(\text{Student gets an A})}{\hat{P}(\text{Student doesn't get an A})} \\
+&= \frac{\hat{P}(\text{Student gets an A})}{1 - \hat{P}(\text{Student gets an A})} \\
+&= \frac{\hat{P}(0.389)}{1 - 0.389)} \\
+&= 0.637
+\end{align*}
+
+Verifying interpretation:
+
+0.608 * 1.051 = 0.639.  This is not quite the result of 0.637, but the difference is rounding error.
+
+### (e) Suppose a student has an undergrad GPA of 3.5.  How many hours would they need to study for us to estimate that there is a probability of 0.5 that they will get an A in the class?
+
+We solve for $x$ in the following equation:
+
+$$0.5 = \frac{e^{(-6 + 0.05 * x + 1 * 3.5)}}{1 + e^{(-6 + 0.05 * x + 1 * 3.5)}}$$
+
+Rearranging, we obtain
+
+$$1 = e^{(-6 + 0.05 * x + 1 * 3.5)}$$
+
+Taking logs yields
+
+$$0 = -6 + 0.05 * x + 1 * 3.5$$
+
+Now solving for $x$ gives
+
+$$x = 50$$
+
+The student would have to study for 50 hours for us to estimate the probability that they will get an A is 0.5.
+
+# Applied Problems
+
+## Problem 4: Breast cancer diagnosis
+
+This problem is adapted from an example in the book "Extending the Linear Model with R" by Julian J. Faraway.
+
+The data set `wbca`, read in below, comes from a study of breast cancer in Wisconsin.  There are 681 cases of potentially concerous tumors of which 238 are actually malignant.  Determining whether a tumor is really malignant is traditionally determined by an invasive surgical procedure.  The purpose of this study was to determine whether a new procedure called fine needle aspiration, which draws only a small sample of tissue, could be effective in determining tumor status.
+
+```{r}
+wbca <- faraway::wbca %>%
+  mutate(
+    Class = ifelse(Class == 1, "Benign", "Malignant"),
+    Class01 = ifelse(Class == "Benign", 0, 1)
+  )
+set.seed(38355)
+```
+
+### (a) Obtain a train/test split of the data, and further obtain a partition of your training set into 10 folds for cross-validation.
+
+```{r}
+train_inds <- caret::createDataPartition(wbca$Class, p = 0.7)
+train_wbca <- wbca %>% slice(train_inds[[1]])
+test_wbca <- wbca %>% slice(-train_inds[[1]])
+
+xval_folds <- caret::createFolds(train_wbca$Class, k = 10)
+```
+
+### (b) There are 9 predictor variables, which are measures of different characteristics of the tissue sample drawn from fine needle aspiration.  Use a backwards stepwise variable selection procedure to pick a model that uses a subset of these variables.  The following sub-parts of this problem guide you through this process.
+
+#### i. Find a cross-validated classification error rate from a model that uses all 9 predictor variables.  Also fit a model with all 9 predictor variables to the full training data set and print out a model summary.  This is your starting model.
+
+```{r}
+fit <- train(
+  form = Class ~ Adhes + BNucl + Chrom + Epith + Mitos + NNucl + Thick + UShap + USize,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ Adhes + BNucl + Chrom + Epith + Mitos + NNucl + Thick + UShap + USize,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+#### ii. Find a cross-validated classification error rate from a model that uses the 8 predictor variables with the smallest individual p-values in your model from part i.  Also fit this model with 8 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ Adhes + BNucl + Chrom + Epith + Mitos + NNucl + Thick + UShap,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ Adhes + BNucl + Chrom + Epith + Mitos + NNucl + Thick + UShap,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### iii. Find a cross-validated classification error rate from a model that uses the 7 predictor variables with the smallest individual p-values in your model from part ii.  Also fit this model with 7 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl + Chrom + Epith + Mitos + NNucl + Thick + UShap,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Chrom + Epith + Mitos + NNucl + Thick + UShap,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### iv. Find a cross-validated classification error rate from a model that uses the 6 predictor variables with the smallest individual p-values in your model from part iii.  Also fit this model with 6 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl + Chrom + Mitos + NNucl + Thick + UShap,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Chrom + Mitos + NNucl + Thick + UShap,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### v. Find a cross-validated classification error rate from a model that uses the 5 predictor variables with the smallest individual p-values in your model from part iv.  Also fit this model with 5 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl + Chrom + NNucl + Thick + UShap,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Chrom + NNucl + Thick + UShap,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### vi. Find a cross-validated classification error rate from a model that uses the 4 predictor variables with the smallest individual p-values in your model from part v.  Also fit this model with 4 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl + Chrom + NNucl + Thick,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Chrom + NNucl + Thick,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### vii. Find a cross-validated classification error rate from a model that uses the 3 predictor variables with the smallest individual p-values in your model from part vi.  Also fit this model with 3 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl + Chrom + Thick,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Chrom + Thick,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### viii. Find a cross-validated classification error rate from a model that uses the 2 predictor variables with the smallest individual p-values in your model from part vii.  Also fit this model with 2 predictor variables to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl + Thick,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Thick,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### ix. Find a cross-validated classification error rate from a model that uses the 1 predictor variable with the smallest individual p-value in your model from part viii.  Also fit this model with 1 predictor variable to the full training data set and print out a model summary.
+
+```{r}
+error_rate <- rep(NA, 10)
+for(i in 1:10) {
+  traintrain <- train_wbca %>% slice(-xval_folds[[i]])
+  valval <- train_wbca %>% slice(xval_folds[[i]])
+  
+  fit <- train(
+    form = Class ~ BNucl,
+    data = traintrain,
+    family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+    method = "glm", # method for fit; "generalized linear model"
+    trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+  )
+  
+  preds <- predict(fit, newdata = valval)
+  
+  error_rate[i] <- mean(preds != valval$Class)
+}
+error_rate
+mean(error_rate)
+```
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+summary(fit)
+```
+
+#### x. Looking back at your results from parts i. through ix, which model would you choose?  If two different models have the same classification error rate, choose the simpler of those two models (that is, the one with fewer explanatory variables).  This is a common approach, based on the idea that a simpler model is less likely to have overfit the training or validation data.
+
+I would use the model with the lowest cross-validated classification error rate.  In my analysis above, this was the model that included the following explanatory variables: BNucl, Chrom, Mitos, NNucl, Thick, and UShap.
+
+### (c) Using your selected model, construct a confusion matrix for the model's classifications on the test set.  Find the classification accuracy, classification error rate, false positive rate, and true positive rate for classifications on the test set.
+
+```{r}
+fit <- train(
+  form = Class ~ BNucl + Chrom + Mitos + NNucl + Thick + UShap,
+  data = train_wbca,
+  family = "binomial", # this is an argument to glm; response is 0 or 1, binomial
+  method = "glm", # method for fit; "generalized linear model"
+  trControl = trainControl(method = "none", classProbs = TRUE, savePredictions = TRUE)
+)
+
+test_pred <- predict(fit, newdata = test_wbca)
+
+table(test_wbca$Class, test_pred)
+```
+
+Classification Accuracy: (130 + 68)/(130 + 2 + 3 + 68) = 0.9753695
+
+Classification Error Rate: (2 + 3)/(130 + 2 + 3 + 68) = 0.02463054
+
+False Positive Rate: 2/(130 + 2) = 0.01515152
+
+True Positive Rate: 68/(3 + 68) = 0.9577465
+
+### (d) Suppose we change the cut off to 0.1, so that we will classify a tumor as malignant if the estimated probability that it is malignant is at least 0.1.
+
+#### i. Using your selected model, construct a confusion matrix for the model's classifications on the test set.  Find the classification accuracy, classification error rate, false positive rate, and true positive rate for classifications on the test set.
+
+```{r}
+test_pred_prob <- predict(fit, newdata = test_wbca, type = "prob")
+test_pred <- ifelse(test_pred_prob[["Malignant"]] > 0.1, "Malignant", "Benign")
+
+table(test_wbca$Class, test_pred)
+```
+
+Classification Accuracy: (126 + 70)/(126 + 6 + 1 + 70) = 0.9655172
+
+Classification Error Rate: (6 + 1)/(126 + 6 + 1 + 70) = 0.03448276
+
+False Positive Rate: 6/(126 + 6) = 0.04545455
+
+True Positive Rate: 70/(1 + 70) = 0.9859155
+
+#### ii. Explain why someone might realistically use a cut off of 0.1 in the context of medical screening using this procedure.
+
+Since we are doing a non-invasive screening with a new medical procedure, I might like to follow up with the standard screening procedure if there is any reasonable chance that the person has a malignant tumor.
+
+
+
+### (e) Produce a ROC plot and find the area under the curve (AUC) based on the test set predictions.  How do your answers to parts (c) and (d) i. relate to the ROC plot?
+
+```{r}
+library(plotROC)
+
+test_wbca <- test_wbca %>%
+  mutate(
+    prob_hat = predict(fit, newdata = test_wbca, type = "prob")[["Malignant"]]
+  )
+
+p <- ggplot(data = test_wbca, mapping = aes(m = prob_hat, d = Class01)) + 
+  geom_roc(n.cuts=0) + 
+  coord_equal() +
+  style_roc()
+p
+
+calc_auc(p)
+```
+
+The false positive and true positive rates from parts (c) and (d) i. give two of the points that make up the ROC plot.
+
+### (f) Does the AUC you found in part (e) indicate a good predictive model?  A "Yes" or "No" answer is good enough.
+
+Yes (we want high AUC).
+
+# Collaboration and Sources
+
+If you worked with any other students on this assignment, please list their names here.
+
+
+
+If you referred to any sources (including our text book), please list them here.  No need to get into formal citation formats, just list the name of the book(s) you used or provide a link to any online resources you used.
+
